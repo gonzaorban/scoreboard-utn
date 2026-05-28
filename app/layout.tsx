@@ -45,6 +45,9 @@ export default function RootLayout({
           <p>
             Copa de las Casas · Materia{" "}
             <span className="font-semibold">Ingeniería y Calidad</span> ·
+            Desarrollado por <span className="font-semibold">Equipo MDD</span>
+          </p>
+          <p className="mt-1 italic">
             “Sucede que necesitamos cierta cantidad de valor para enfrentarnos a
             nuestros enemigos…”
           </p>
