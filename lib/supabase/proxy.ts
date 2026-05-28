@@ -33,9 +33,11 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // IMPORTANTE: getClaims/getUser revalida el token y dispara el refresco
-  // de cookies. No metas lógica entre createServerClient y esta llamada.
-  await supabase.auth.getUser();
+  // IMPORTANTE: getClaims revalida el token y dispara el refresco de cookies.
+  // No metas lógica entre createServerClient y esta llamada.
+  // Usamos getClaims() (recomendado con el nuevo formato de claves
+  // sb_publishable_*, valida el JWT localmente) en vez de getUser().
+  await supabase.auth.getClaims();
 
   return supabaseResponse;
 }

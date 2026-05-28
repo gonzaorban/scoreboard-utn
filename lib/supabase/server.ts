@@ -39,9 +39,10 @@ export async function createClient() {
  * Salta RLS. Úsalo únicamente para tareas administrativas controladas
  * (p. ej. dar de alta profesores). Nunca lo expongas al cliente.
  */
-export function createServiceClient() {
-  const { createClient: createSupabaseClient } =
-    require("@supabase/supabase-js") as typeof import("@supabase/supabase-js");
+export async function createServiceClient() {
+  const { createClient: createSupabaseClient } = await import(
+    "@supabase/supabase-js"
+  );
 
   return createSupabaseClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
