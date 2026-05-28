@@ -1,93 +1,130 @@
 # 🪄 Copa de las Casas · Ingeniería y Calidad
 
-Marcador de puntos para la materia **Ingeniería y Calidad**, con temática
-**Harry Potter** (la "Copa de las Casas" de Hogwarts).
+> Marcador online de puntos por equipos para la materia **Ingeniería y
+> Calidad**, ambientado en la **Copa de las Casas de Hogwarts** (Harry Potter).
 
-- **Profesores** (logueados) otorgan o restan puntos y administran los equipos.
-- **Estudiantes / invitados** entran sin registrarse y ven, en solo lectura, la
-  tabla de puntajes y el historial completo de cambios.
+Una aplicación web sencilla donde el profesorado otorga o resta puntos a los
+equipos ("casas") y cualquier estudiante puede consultar, sin registrarse, la
+tabla de posiciones y el historial completo de cambios.
 
-## Funcionalidades
+---
 
-- ✅ Tabla pública de equipos y puntajes (ranking con casas de Hogwarts).
-- ✅ Historial público: quién (qué profesor), cuándo, de qué valor a qué valor y
-  con qué motivo cambió cada puntaje.
-- ✅ Botón **Guardar puntaje** que registra el cambio con fecha/hora de forma
-  atómica (RPC `update_score`).
-- ✅ ABM de equipos (crear, editar nombre/casa, eliminar) — solo profesores.
-- ✅ Login de profesores con email + contraseña (Supabase Auth).
-- ✅ Seguridad real con **RLS**: los invitados solo pueden leer.
+## 🧑‍🎓 ¿Qué es esto? (para estudiantes y visitantes)
 
-## Stack
+Es el **tablero de puntos del torneo de la materia**. A lo largo de la cursada,
+los equipos suman (o pierden) puntos según su desempeño, igual que las casas de
+Hogwarts compiten por la Copa.
+
+**Como estudiante o visitante puedes, sin crear ninguna cuenta:**
+
+- 🏆 **Ver el marcador** — la tabla con cada equipo, su casa y sus puntos,
+  ordenada de mayor a menor. (Página principal.)
+- 📜 **Ver el historial** — el "Gran Libro" con cada cambio de puntos: qué
+  equipo, de cuántos puntos a cuántos, qué profesor lo hizo, cuándo y por qué.
+  (Sección **Historial**.)
+
+No necesitas instalar nada: se abre desde cualquier navegador. La información es
+de **solo lectura** para los estudiantes; únicamente el profesorado puede
+modificar puntos.
+
+> ¿No ves los últimos cambios? Usa el botón **“↻ Actualizar”** para recargar el
+> marcador.
+
+---
+
+## 👩‍🏫 ¿Qué pueden hacer los profesores?
+
+El profesorado inicia sesión con su email y contraseña y obtiene acceso a:
+
+- **Otorgar / restar puntos** a cada equipo, con un motivo opcional. Cada cambio
+  queda firmado automáticamente con su nombre y la fecha/hora en el historial.
+- **Gestionar equipos**: crear, renombrar, asignar casa o eliminar.
+
+El acceso de profesores es privado y se gestiona manualmente (no hay registro
+abierto), de modo que nadie ajeno pueda alterar el marcador.
+
+---
+
+## ⚙️ Información técnica (para desarrolladores)
+
+### Stack
 
 - [Next.js 16](https://nextjs.org) (App Router, Server Actions) + TypeScript
-- [Supabase](https://supabase.com) (Postgres + Auth + RLS) — free tier
+- [Supabase](https://supabase.com) (PostgreSQL + Auth + Row Level Security)
 - [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com)
-- Deploy en [Vercel](https://vercel.com)
+- Desplegado en [Vercel](https://vercel.com)
 
-No se usa ORM: las consultas van con `supabase-js` (query builder) y el tipado
-sale de `lib/database.types.ts`.
+Sin ORM: las consultas usan el query builder de `supabase-js` y el tipado sale
+de [`lib/database.types.ts`](lib/database.types.ts).
 
----
+### 🔒 Seguridad (importante: este repositorio es público)
 
-## Puesta en marcha
+- **Este repo no contiene credenciales.** Las claves y la URL del proyecto viven
+  solo en variables de entorno (en local: `.env.local`, ignorado por git; en
+  producción: panel de Vercel). El archivo versionado es únicamente la plantilla
+  [`.env.local.example`](.env.local.example), sin valores reales.
+- **La defensa real es Row Level Security (RLS)** en la base de datos: la clave
+  pública que llega al navegador solo permite **leer** equipos, historial y
+  nombres de profesores. Crear o modificar puntos/equipos exige una sesión de
+  profesor verificada. Por eso es seguro que el marcador sea público.
+- **Nunca** publiques ni subas la clave secreta (`service_role` / `sb_secret_*`).
+  Si alguna credencial se expusiera, **rótala** desde el panel de Supabase
+  (Settings → API) y vuelve a desplegar.
 
-### 1. Crear el proyecto Supabase
+### Cómo correrlo en local
 
-1. Crea un proyecto gratis en <https://supabase.com>.
-2. En **Settings → API** copia la _Project URL_ y la _anon public key_.
+1. **Crea un proyecto Supabase** (gratis) en <https://supabase.com>.
+2. **Aplica el esquema**: en el **SQL Editor** del panel de Supabase, ejecuta el
+   contenido de
+   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
+   Crea las tablas (`teachers`, `teams`, `score_changes`), las políticas RLS y
+   las funciones `is_teacher()` y `update_score()`.
+3. **Variables de entorno**: copia `.env.local.example` a `.env.local` y completa
+   con los valores de tu proyecto (Settings → API):
 
-### 2. Aplicar el esquema
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=<tu-project-url>
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<tu-clave-publishable-o-anon>
+   # SUPABASE_SERVICE_ROLE_KEY=<solo si automatizas el alta de profesores>
+   ```
 
-Abre **SQL Editor** en el dashboard de Supabase y pega/ejecuta el contenido de
-[`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql). Esto
-crea las tablas (`teachers`, `teams`, `score_changes`), las políticas RLS y las
-funciones `is_teacher()` y `update_score()`.
+4. **Instala y arranca**:
 
-> Si usas la Supabase CLI: `supabase db push` con el proyecto enlazado.
+   ```bash
+   npm install
+   npm run dev
+   ```
 
-### 3. Variables de entorno
+   Abre <http://localhost:3000>.
 
-Copia `.env.local.example` a `.env.local` y completa:
+### Crear el primer profesor
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...
-# SUPABASE_SERVICE_ROLE_KEY=...   # opcional, solo si automatizas alta de profesores
-```
+No hay registro público de profesores (es intencional). Se da de alta a mano:
 
-### 4. Instalar y correr
-
-```bash
-npm install
-npm run dev
-```
-
-Abre <http://localhost:3000>.
-
----
-
-## Crear el primer profesor
-
-No hay registro público de profesores (es intencional). Crea el primero a mano:
-
-1. En Supabase, **Authentication → Users → Add user**: crea un usuario con
-   email + contraseña (marca _Auto Confirm User_).
-2. Copia su **UUID** (columna `id`).
-3. En **SQL Editor**, registra a ese usuario como profesor:
+1. En Supabase, **Authentication → Users → Add user**: email + contraseña, marca
+   _Auto Confirm User_.
+2. Copia el **UUID** del usuario (columna `id`).
+3. En el **SQL Editor**, regístralo como profesor:
 
    ```sql
    insert into public.teachers (id, full_name)
    values ('PEGA-AQUI-EL-UUID', 'Prof. Minerva McGonagall');
    ```
 
-Ya puedes iniciar sesión en `/login` con ese email/contraseña.
+Listo: ya puede iniciar sesión en `/login`. Repite estos pasos por cada profesor.
 
-> Para añadir más profesores, repite los pasos 1–3 con cada uno.
+### Desplegar en Vercel
 
----
+1. Importa el repositorio de GitHub en Vercel (detecta Next.js solo).
+2. En **Settings → Environment Variables** carga `NEXT_PUBLIC_SUPABASE_URL` y
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (y `SUPABASE_SERVICE_ROLE_KEY` si la usas).
+   Asígnalas a los entornos **Production** y **Preview**.
+3. Despliega. Cada `push` a `main` redesplegará automáticamente.
 
-## Estructura
+> **Nota:** las variables de entorno solo se aplican a deploys hechos **después**
+> de agregarlas. Si las agregaste tras el primer deploy, haz un **Redeploy**.
+
+### Estructura del proyecto
 
 ```
 app/
@@ -105,26 +142,15 @@ lib/
   auth.ts               # getCurrentTeacher()
   houses.ts             # metadatos de las casas de Hogwarts
   database.types.ts     # tipos del esquema
-proxy.ts                # refresco de sesión (antes "middleware")
+proxy.ts                # refresco de sesión (reemplaza al "middleware")
 supabase/migrations/    # SQL del esquema + RLS
 ```
 
----
+### Notas de diseño
 
-## Deploy en Vercel
-
-1. Sube el repo a GitHub e impórtalo en Vercel.
-2. En **Settings → Environment Variables** carga `NEXT_PUBLIC_SUPABASE_URL` y
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` (y `SUPABASE_SERVICE_ROLE_KEY` si la usas).
-3. Deploy. Vercel detecta Next.js automáticamente.
-
----
-
-## Notas de diseño
-
-- **Sin tiempo real:** la tabla y el historial se actualizan al recargar (hay un
-  botón "↻ Actualizar"). Suficiente para el alcance (~200 alumnos).
+- **Sin tiempo real:** la tabla y el historial se actualizan al recargar (botón
+  “↻ Actualizar”). Suficiente para el alcance (~200 alumnos).
 - **Atomicidad:** `update_score()` actualiza el puntaje e inserta el registro de
-  historial en una sola transacción Postgres, evitando inconsistencias.
-- **Seguridad:** aunque las Server Actions validan que el usuario sea profesor,
-  la defensa real es **RLS** — la `anon key` solo permite `SELECT`.
+  historial en una sola transacción de PostgreSQL, evitando inconsistencias.
+- **Sesión:** `proxy.ts` refresca el token de Supabase en cada request mediante
+  `getClaims()` (compatible con el formato de claves `sb_publishable_*`).
