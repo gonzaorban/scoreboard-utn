@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentTeacher } from "@/lib/auth";
 import { LoginForm } from "@/components/login-form";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -40,9 +41,9 @@ export default async function LoginPage() {
       </Card>
       <p className="mt-4 text-center text-sm text-muted-foreground">
         ¿Solo quieres ver el marcador?{" "}
-        <a href="/" className="font-medium text-primary underline">
+        <Link href="/" className="font-medium text-primary underline">
           Vuelve a la tabla
-        </a>
+        </Link>
         .
       </p>
     </div>
