@@ -3,14 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentTeacher } from "@/lib/auth";
-import { HOUSES, type HouseKey } from "@/lib/houses";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
-
-function normalizeHouse(value: FormDataEntryValue | null): HouseKey | null {
-  const v = String(value ?? "").trim();
-  return v in HOUSES ? (v as HouseKey) : null;
-}
 
 /** Crea un equipo nuevo (ABM). Solo profesores. */
 export async function createTeam(formData: FormData): Promise<ActionResult> {
@@ -18,7 +12,6 @@ export async function createTeam(formData: FormData): Promise<ActionResult> {
   if (!teacher) return { ok: false, error: "No autorizado." };
 
   const name = String(formData.get("name") ?? "").trim();
-  const house = normalizeHouse(formData.get("house"));
   const points = Number(formData.get("points") ?? 0);
 
   if (!name) return { ok: false, error: "El nombre del equipo es obligatorio." };
@@ -29,7 +22,7 @@ export async function createTeam(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient();
   const { error } = await supabase
     .from("teams")
-    .insert({ name, house, points });
+    .insert({ name, points });
 
   if (error) return { ok: false, error: "No se pudo crear el equipo." };
 
@@ -40,7 +33,7 @@ export async function createTeam(formData: FormData): Promise<ActionResult> {
 }
 
 /**
- * Modifica nombre y/o casa de un equipo (ABM). No toca los puntos: para eso
+ * Modifica nombre de un equipo (ABM). No toca los puntos: para eso
  * está `updateScore` (que registra historial). Solo profesores.
  */
 export async function updateTeam(
@@ -51,14 +44,13 @@ export async function updateTeam(
   if (!teacher) return { ok: false, error: "No autorizado." };
 
   const name = String(formData.get("name") ?? "").trim();
-  const house = normalizeHouse(formData.get("house"));
 
   if (!name) return { ok: false, error: "El nombre del equipo es obligatorio." };
 
   const supabase = await createClient();
   const { error } = await supabase
     .from("teams")
-    .update({ name, house, updated_at: new Date().toISOString() })
+    .update({ name, updated_at: new Date().toISOString() })
     .eq("id", teamId);
 
   if (error) return { ok: false, error: "No se pudo actualizar el equipo." };

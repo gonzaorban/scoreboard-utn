@@ -23,9 +23,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Copa de las Casas · Ingeniería y Calidad",
+  title: "Marcador · Ingeniería y Calidad",
   description:
-    "Marcador oficial de la Copa de las Casas de la materia Ingeniería y Calidad. Los profesores otorgan y restan puntos; los estudiantes consultan la tabla y el historial.",
+    "Marcador oficial de la materia Ingeniería y Calidad. Los profesores otorgan y restan puntos; los estudiantes consultan la tabla y el historial.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
@@ -43,7 +46,7 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
         <footer className="border-t border-border/60 py-6 text-center text-sm text-muted-foreground">
           <p>
-            Copa de las Casas · Materia{" "}
+            Marcador · Materia{" "}
             <span className="font-semibold">Ingeniería y Calidad</span> ·
             Desarrollado por <span className="font-semibold">Equipo MDD</span>
           </p>

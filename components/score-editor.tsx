@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateScore } from "@/app/actions/scores";
-import { getHouse } from "@/lib/houses";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,6 @@ import type { Team } from "@/lib/database.types";
 const QUICK_STEPS = [-10, -5, +5, +10];
 
 function TeamCard({ team }: { team: Team }) {
-  const house = getHouse(team.house);
   const [points, setPoints] = useState<number>(team.points);
   const [reason, setReason] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -43,23 +41,10 @@ function TeamCard({ team }: { team: Team }) {
   }
 
   return (
-    <Card className={cn("border-l-4 border-l-transparent", house?.accent)}>
+    <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between font-heading text-lg">
-          <span>
-            <span className="mr-1.5">{house?.crest ?? "✨"}</span>
-            {team.name}
-          </span>
-          {house && (
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-0.5 text-xs font-medium",
-                house.badge,
-              )}
-            >
-              {house.name}
-            </span>
-          )}
+          <span>{team.name}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

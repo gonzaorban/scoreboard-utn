@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { createTeam, updateTeam, deleteTeam } from "@/app/actions/teams";
-import { HOUSE_OPTIONS, getHouse } from "@/lib/houses";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,27 +26,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import type { Team } from "@/lib/database.types";
-
-function HouseSelect({
-  defaultValue,
-}: {
-  defaultValue?: string | null;
-}) {
-  return (
-    <select
-      name="house"
-      defaultValue={defaultValue ?? ""}
-      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <option value="">Sin casa</option>
-      {HOUSE_OPTIONS.map((h) => (
-        <option key={h.key} value={h.key}>
-          {h.crest} {h.name}
-        </option>
-      ))}
-    </select>
-  );
-}
 
 /** Diálogo para crear un equipo nuevo. */
 function CreateTeamDialog() {
@@ -78,17 +56,13 @@ function CreateTeamDialog() {
           <DialogHeader>
             <DialogTitle className="font-heading">Nuevo equipo</DialogTitle>
             <DialogDescription>
-              Da de alta una casa para que entre en competición.
+              Da de alta un equipo para que entre en competición.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="new-name">Nombre del equipo</Label>
               <Input id="new-name" name="name" required placeholder="Los Inefables" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-house">Casa</Label>
-              <HouseSelect />
             </div>
             <div className="space-y-2">
               <Label htmlFor="new-points">Puntos iniciales</Label>
@@ -111,7 +85,7 @@ function CreateTeamDialog() {
   );
 }
 
-/** Diálogo para editar nombre/casa de un equipo. */
+/** Diálogo para editar nombre de un equipo. */
 function EditTeamDialog({ team }: { team: Team }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -146,7 +120,7 @@ function EditTeamDialog({ team }: { team: Team }) {
           <DialogHeader>
             <DialogTitle className="font-heading">Editar equipo</DialogTitle>
             <DialogDescription>
-              Cambia el nombre o la casa. Los puntos se gestionan desde la
+              Cambia el nombre. Los puntos se gestionan desde la
               sección de puntos.
             </DialogDescription>
           </DialogHeader>
@@ -159,10 +133,6 @@ function EditTeamDialog({ team }: { team: Team }) {
                 required
                 defaultValue={team.name}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor={`house-${team.id}`}>Casa</Label>
-              <HouseSelect defaultValue={team.house} />
             </div>
           </div>
           <DialogFooter>
@@ -250,52 +220,25 @@ export function TeamsAdmin({ teams }: { teams: Team[] }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Equipo</TableHead>
-                <TableHead className="hidden sm:table-cell">Casa</TableHead>
                 <TableHead className="text-right">Puntos</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {teams.map((team) => {
-                const house = getHouse(team.house);
-                return (
-                  <TableRow
-                    key={team.id}
-                    className={cn(
-                      "border-l-4 border-l-transparent",
-                      house?.accent,
-                    )}
-                  >
-                    <TableCell className="font-medium">
-                      <span className="mr-1.5">{house?.crest ?? "✨"}</span>
-                      {team.name}
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                      {house ? (
-                        <span
-                          className={cn(
-                            "rounded-full px-2.5 py-0.5 text-xs font-medium",
-                            house.badge,
-                          )}
-                        >
-                          {house.name}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right font-mono font-bold tabular-nums">
-                      {team.points}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <EditTeamDialog team={team} />
-                        <DeleteTeamDialog team={team} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {teams.map((team) => (
+                <TableRow key={team.id}>
+                  <TableCell className="font-medium">{team.name}</TableCell>
+                  <TableCell className="text-right font-mono font-bold tabular-nums">
+                    {team.points}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <EditTeamDialog team={team} />
+                      <DeleteTeamDialog team={team} />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>

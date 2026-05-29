@@ -6,7 +6,7 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Historial · Copa de las Casas",
+  title: "Historial · Marcador",
 };
 
 export default async function HistorialPage() {

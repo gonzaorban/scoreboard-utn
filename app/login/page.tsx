@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 
 export const metadata = {
-  title: "Acceso de profesores · Copa de las Casas",
+  title: "Acceso de profesores · Marcador",
 };
 
 export default async function LoginPage() {
@@ -31,7 +31,7 @@ export default async function LoginPage() {
           <CardDescription>
             Solo el profesorado de{" "}
             <span className="font-semibold">Ingeniería y Calidad</span> puede
-            otorgar o restar puntos a las casas.
+            otorgar o restar puntos a los equipos.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -6,7 +6,7 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Gestión de equipos · Copa de las Casas",
+  title: "Gestión de equipos · Marcador",
 };
 
 export default async function AdminTeamsPage() {
@@ -24,7 +24,7 @@ export default async function AdminTeamsPage() {
             Gestión de equipos
           </h1>
           <p className="text-muted-foreground">
-            Alta, baja y modificación de las casas que compiten por la Copa.
+            Alta, baja y modificación de los equipos que compiten.
           </p>
         </div>
         <Link href="/admin" className={buttonVariants({ variant: "outline" })}>
