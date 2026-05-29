@@ -24,8 +24,8 @@ export default async function HomePage() {
           La Copa de las Casas
         </h1>
         <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-          El recuento de puntos del torneo. Cada acierto suma para tu casa; cada
-          descuido… resta. Que gane la que mejor domine el arte de la ingeniería
+          El recuento de puntos del torneo. Cada acierto suma para tu equipo; cada
+          descuido… resta. Que gane el que mejor domine el arte de la ingeniería
           y la calidad.
         </p>
       </section>

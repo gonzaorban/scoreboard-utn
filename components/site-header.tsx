@@ -18,7 +18,7 @@ export async function SiteHeader() {
             🪄
           </span>
           <span className="font-heading text-lg font-bold leading-tight text-primary">
-            Copa de las Casas
+            La Copa de las Casas
             <span className="block text-[0.7rem] font-normal uppercase tracking-widest text-muted-foreground">
               Ingeniería y Calidad
             </span>

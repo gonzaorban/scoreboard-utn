@@ -6,7 +6,7 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Otorgar puntos · Copa de las Casas",
+  title: "Otorgar puntos · Marcador",
 };
 
 export default async function AdminScoresPage() {
@@ -25,7 +25,7 @@ export default async function AdminScoresPage() {
             Otorgar y restar puntos
           </h1>
           <p className="text-muted-foreground">
-            Ajusta el marcador de cada casa. Cada cambio queda firmado con tu
+            Ajusta el marcador de cada equipo. Cada cambio queda firmado con tu
             nombre y la hora en el{" "}
             <Link href="/historial" className="underline">
               historial
