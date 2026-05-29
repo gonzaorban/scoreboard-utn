@@ -140,7 +140,6 @@ components/             # UI (tablas, editor, ABM) + shadcn/ui en components/ui
 lib/
   supabase/             # clientes server/client/proxy
   auth.ts               # getCurrentTeacher()
-  houses.ts             # metadatos de las casas de Hogwarts
   database.types.ts     # tipos del esquema
 proxy.ts                # refresco de sesión (reemplaza al "middleware")
 supabase/migrations/    # SQL del esquema + RLS
