@@ -49,6 +49,27 @@ jobs:
       - name: Pull Vercel environment
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
+      - name: Verificar env vars de producción en Vercel
+        run: |
+          envfile=".vercel/.env.production.local"
+          if [ ! -f "$envfile" ]; then
+            echo "::error::'vercel pull' no generó $envfile. No hay env vars de Production en el proyecto de Vercel."
+            exit 1
+          fi
+          missing=""
+          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY; do
+            # Considera faltante si no existe la clave o si su valor está vacío.
+            if ! grep -qE "^${v}=.+" "$envfile"; then
+              missing="$missing $v"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Faltan env vars en Vercel (Settings → Environment Variables, entorno Production):$missing"
+            echo "Las NEXT_PUBLIC_* se hornean en 'vercel build'; si faltan, el deploy levanta pero crashea con 'Your project's URL and Key are required'."
+            exit 1
+          fi
+          echo "Env vars de Production presentes en Vercel. OK para buildear."
+
       - name: Build
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
