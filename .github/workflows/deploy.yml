@@ -20,6 +20,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verificar secrets de Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          missing=""
+          [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
+          [ -z "$VERCEL_ORG_ID" ] && missing="$missing VERCEL_ORG_ID"
+          [ -z "$VERCEL_PROJECT_ID" ] && missing="$missing VERCEL_PROJECT_ID"
+          if [ -n "$missing" ]; then
+            echo "::error::Faltan secrets en GitHub para desplegar a Vercel:$missing"
+            exit 1
+          fi
+          echo "Secrets de Vercel presentes. Las env vars de runtime (Supabase) se toman de Vercel vía 'vercel pull'."
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:

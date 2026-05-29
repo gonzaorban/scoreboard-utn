@@ -20,6 +20,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Verificar variables de entorno
+        run: |
+          missing=""
+          [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] && missing="$missing NEXT_PUBLIC_SUPABASE_URL"
+          [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] && missing="$missing NEXT_PUBLIC_SUPABASE_ANON_KEY"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && missing="$missing SUPABASE_SERVICE_ROLE_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Faltan secrets en GitHub (Settings → Secrets and variables → Actions):$missing"
+            echo "Recordá: las mismas variables deben existir en Vercel (Settings → Environment Variables, entorno Production)."
+            exit 1
+          fi
+          echo "Todas las variables de entorno requeridas están presentes."
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
