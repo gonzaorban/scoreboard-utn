@@ -53,18 +53,17 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Preparar entorno de Vercel desde secrets
+      - name: Pull Vercel project settings
+        # 'vercel build' necesita los Project Settings (framework, build command).
+        # Solo 'vercel pull' sabe traerlos; generar project.json a mano no alcanza.
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Sobrescribir env vars de Supabase desde secrets de GitHub
         run: |
-          # Reemplaza a 'vercel pull': generamos a mano lo que 'vercel build' y
-          # 'vercel deploy --prebuilt' necesitan, tomándolo de los secrets de GitHub.
-          mkdir -p .vercel
-
-          # 1) project.json: a qué proyecto/org desplegar. (Sin heredoc para no
-          #    depender de la indentación que YAML aplica al bloque run.)
-          printf '{"orgId":"%s","projectId":"%s"}\n' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
-
-          # 2) env vars de producción: 'vercel build' las hornea desde este archivo.
-          #    Las NEXT_PUBLIC_* no son secretas (van embebidas en el JS del cliente).
+          # 'vercel pull' no puede leer variables marcadas como "Sensitive" en
+          # Vercel (p. ej. NEXT_PUBLIC_SUPABASE_URL), así que las pisamos con los
+          # secrets de GitHub. Las NEXT_PUBLIC_* no son secretas (van embebidas en
+          # el JS del cliente), por lo que es seguro hornearlas desde GitHub.
           {
             echo "NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}"
             echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
@@ -77,7 +76,7 @@ jobs:
               exit 1
             fi
           done
-          echo "Entorno de Vercel preparado desde secrets de GitHub."
+          echo "Env vars de Supabase tomadas de los secrets de GitHub."
 
       - name: Build
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
