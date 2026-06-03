@@ -27,9 +27,17 @@ export default async function AdminTeamsPage() {
             Alta, baja y modificación de los equipos que compiten.
           </p>
         </div>
-        <Link href="/admin" className={buttonVariants({ variant: "outline" })}>
-          Otorgar puntos
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/admin" className={buttonVariants({ variant: "outline" })}>
+            Otorgar puntos
+          </Link>
+          <Link
+            href="/admin/profesores"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Profesores
+          </Link>
+        </div>
       </div>
 
       <TeamsAdmin teams={teams ?? []} />

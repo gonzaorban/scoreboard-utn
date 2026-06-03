@@ -38,10 +38,14 @@ El profesorado inicia sesión con su email y contraseña y obtiene acceso a:
 
 - **Otorgar / restar puntos** a cada equipo, con un motivo opcional. Cada cambio
   queda firmado automáticamente con su nombre y la fecha/hora en el historial.
-- **Gestionar equipos**: crear, renombrar, asignar casa o eliminar.
+- **Gestionar equipos**: crear, renombrar o eliminar.
+- **Gestionar profesores**: en la sección **Profesores**, aprobar o rechazar las
+  solicitudes de quienes se registran, y dar de baja a profesores con acceso.
 
-El acceso de profesores es privado y se gestiona manualmente (no hay registro
-abierto), de modo que nadie ajeno pueda alterar el marcador.
+Cualquiera puede **solicitar acceso** desde `/registro`, pero la solicitud queda
+**pendiente**: hasta que un profesor ya aprobado la apruebe, ese usuario solo ve
+el sitio público (no puede tocar puntos ni equipos). Así nadie ajeno altera el
+marcador sin el visto bueno del profesorado.
 
 ---
 
@@ -70,25 +74,38 @@ de [`lib/database.types.ts`](lib/database.types.ts).
 - **Nunca** publiques ni subas la clave secreta (`service_role` / `sb_secret_*`).
   Si alguna credencial se expusiera, **rótala** desde el panel de Supabase
   (Settings → API) y vuelve a desplegar.
+- El **auto-registro** de profesores funciona con la clave pública + RLS: un
+  usuario solo puede crear su **propia** solicitud en estado `pending` y nunca
+  auto-aprobarse (no hay política de escritura del estado; aprobar/rechazar/dar
+  de baja pasan por funciones `security definer` que exigen ser profesor
+  aprobado). Por eso `SUPABASE_SERVICE_ROLE_KEY` **ya no es necesaria** para el
+  alta de profesores.
 
 ### Cómo correrlo en local
 
 1. **Crea un proyecto Supabase** (gratis) en <https://supabase.com>.
-2. **Aplica el esquema**: en el **SQL Editor** del panel de Supabase, ejecuta el
-   contenido de
-   [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql).
-   Crea las tablas (`teachers`, `teams`, `score_changes`), las políticas RLS y
-   las funciones `is_teacher()` y `update_score()`.
-3. **Variables de entorno**: copia `.env.local.example` a `.env.local` y completa
+2. **Aplica el esquema**: en el **SQL Editor** del panel de Supabase, ejecuta en
+   orden el contenido de las migraciones de
+   [`supabase/migrations/`](supabase/migrations/):
+   [`0001_init.sql`](supabase/migrations/0001_init.sql) (tablas, RLS, `is_teacher()`,
+   `update_score()`), [`0002_drop_house.sql`](supabase/migrations/0002_drop_house.sql)
+   y [`0003_teacher_approval.sql`](supabase/migrations/0003_teacher_approval.sql)
+   (auto-registro + aprobación: columna `status` en `teachers` y funciones
+   `approve_teacher()` / `reject_teacher()` / `remove_teacher()`).
+3. **Desactiva la confirmación de email**: en **Authentication → Providers →
+   Email**, apaga _Confirm email_ (auto-confirm). El auto-registro necesita que
+   el `signUp` deje la sesión activa de inmediato; con la confirmación activada,
+   el registro no abriría sesión y el flujo de "pendiente" fallaría.
+4. **Variables de entorno**: copia `.env.local.example` a `.env.local` y completa
    con los valores de tu proyecto (Settings → API):
 
    ```bash
    NEXT_PUBLIC_SUPABASE_URL=<tu-project-url>
    NEXT_PUBLIC_SUPABASE_ANON_KEY=<tu-clave-publishable-o-anon>
-   # SUPABASE_SERVICE_ROLE_KEY=<solo si automatizas el alta de profesores>
+   # SUPABASE_SERVICE_ROLE_KEY=<opcional; no se usa para el alta de profesores>
    ```
 
-4. **Instala y arranca**:
+5. **Instala y arranca**:
 
    ```bash
    npm install
@@ -97,21 +114,31 @@ de [`lib/database.types.ts`](lib/database.types.ts).
 
    Abre <http://localhost:3000>.
 
-### Crear el primer profesor
+### Crear el primer profesor (bootstrap)
 
-No hay registro público de profesores (es intencional). Se da de alta a mano:
+El **primer** profesor debe crearse a mano, porque hace falta alguien aprobado
+para poder aprobar a los demás. A partir de ahí, el resto se **auto-registra**.
 
 1. En Supabase, **Authentication → Users → Add user**: email + contraseña, marca
    _Auto Confirm User_.
 2. Copia el **UUID** del usuario (columna `id`).
-3. En el **SQL Editor**, regístralo como profesor:
+3. En el **SQL Editor**, regístralo como profesor **ya aprobado**:
 
    ```sql
-   insert into public.teachers (id, full_name)
-   values ('PEGA-AQUI-EL-UUID', 'Prof. Minerva McGonagall');
+   insert into public.teachers (id, full_name, status)
+   values ('PEGA-AQUI-EL-UUID', 'Prof. Minerva McGonagall', 'approved');
    ```
 
-Listo: ya puede iniciar sesión en `/login`. Repite estos pasos por cada profesor.
+Listo: ya puede iniciar sesión en `/login` y entrar al panel.
+
+### Registrar a los demás profesores (desde la web)
+
+1. Cada nuevo profesor se registra en `/registro` (nombre, email, contraseña).
+   Su solicitud queda **pendiente** y se le muestra una pantalla de espera.
+2. Un profesor ya aprobado entra a **Profesores** (`/admin/profesores`), ve la
+   solicitud y la **aprueba** (o la **rechaza**). También puede **dar de baja** a
+   profesores que ya no deban tener acceso (no puede darse de baja a sí mismo).
+3. Una vez aprobado, el nuevo profesor inicia sesión y obtiene acceso completo.
 
 ### Desplegar en Vercel
 
@@ -131,18 +158,21 @@ app/
   page.tsx              # Tabla pública de puntajes (/)
   historial/page.tsx    # Historial público (/historial)
   login/page.tsx        # Login de profesores
+  registro/page.tsx     # Auto-registro de profesores (solicitud pendiente)
+  pendiente/page.tsx    # Pantalla de espera para solicitudes sin aprobar
   admin/
-    layout.tsx          # Guard: solo profesores
+    layout.tsx          # Guard: solo profesores aprobados
     page.tsx            # Otorgar/restar puntos (botón Guardar)
     equipos/page.tsx    # ABM de equipos
-  actions/              # Server Actions (auth, scores, teams)
+    profesores/page.tsx # Aprobar/rechazar/dar de baja profesores
+  actions/              # Server Actions (auth, scores, teams, teachers-admin)
 components/             # UI (tablas, editor, ABM) + shadcn/ui en components/ui
 lib/
   supabase/             # clientes server/client/proxy
-  auth.ts               # getCurrentTeacher()
+  auth.ts               # getCurrentTeacher() + getCurrentUserStatus()
   database.types.ts     # tipos del esquema
 proxy.ts                # refresco de sesión (reemplaza al "middleware")
-supabase/migrations/    # SQL del esquema + RLS
+supabase/migrations/    # SQL del esquema + RLS (0001 → 0003)
 ```
 
 ### Notas de diseño

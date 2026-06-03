@@ -14,6 +14,9 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
+/** Estado de aprobación de un profesor. Ver migración 0003. */
+export type TeacherStatus = "pending" | "approved";
+
 export interface Database {
   public: {
     Tables: {
@@ -21,16 +24,19 @@ export interface Database {
         Row: {
           id: string;
           full_name: string;
+          status: TeacherStatus;
           created_at: string;
         };
         Insert: {
           id: string;
           full_name: string;
+          status?: TeacherStatus;
           created_at?: string;
         };
         Update: {
           id?: string;
           full_name?: string;
+          status?: TeacherStatus;
           created_at?: string;
         };
         Relationships: [];
@@ -67,7 +73,7 @@ export interface Database {
           old_points: number;
           new_points: number;
           reason: string | null;
-          changed_by: string;
+          changed_by: string | null;
           changed_by_name: string;
           created_at: string;
         };
@@ -78,7 +84,7 @@ export interface Database {
           old_points: number;
           new_points: number;
           reason?: string | null;
-          changed_by: string;
+          changed_by?: string | null;
           changed_by_name: string;
           created_at?: string;
         };
@@ -89,7 +95,7 @@ export interface Database {
           old_points?: number;
           new_points?: number;
           reason?: string | null;
-          changed_by?: string;
+          changed_by?: string | null;
           changed_by_name?: string;
           created_at?: string;
         };
@@ -108,6 +114,18 @@ export interface Database {
           p_new_points: number;
           p_reason?: string | null;
         };
+        Returns: undefined;
+      };
+      approve_teacher: {
+        Args: { p_teacher_id: string };
+        Returns: undefined;
+      };
+      reject_teacher: {
+        Args: { p_teacher_id: string };
+        Returns: undefined;
+      };
+      remove_teacher: {
+        Args: { p_teacher_id: string };
         Returns: undefined;
       };
     };
