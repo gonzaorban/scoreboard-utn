@@ -13,14 +13,19 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     env:
+      # Config del proyecto y env vars de runtime: TODO sale de los secrets de
+      # GitHub. No usamos 'vercel pull' (no podía leer variables marcadas como
+      # "Sensitive" en Vercel, lo que dejaba el build sin la URL de Supabase).
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Verificar secrets de Vercel
+      - name: Verificar secrets requeridos
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
@@ -28,11 +33,13 @@ jobs:
           [ -z "$VERCEL_TOKEN" ] && missing="$missing VERCEL_TOKEN"
           [ -z "$VERCEL_ORG_ID" ] && missing="$missing VERCEL_ORG_ID"
           [ -z "$VERCEL_PROJECT_ID" ] && missing="$missing VERCEL_PROJECT_ID"
+          [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] && missing="$missing NEXT_PUBLIC_SUPABASE_URL"
+          [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] && missing="$missing NEXT_PUBLIC_SUPABASE_ANON_KEY"
           if [ -n "$missing" ]; then
-            echo "::error::Faltan secrets en GitHub para desplegar a Vercel:$missing"
+            echo "::error::Faltan secrets en GitHub (Settings → Secrets and variables → Actions):$missing"
             exit 1
           fi
-          echo "Secrets de Vercel presentes. Las env vars de runtime (Supabase) se toman de Vercel vía 'vercel pull'."
+          echo "Secrets requeridos presentes."
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -46,29 +53,31 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel
 
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Verificar env vars de producción en Vercel
+      - name: Preparar entorno de Vercel desde secrets
         run: |
-          envfile=".vercel/.env.production.local"
-          if [ ! -f "$envfile" ]; then
-            echo "::error::'vercel pull' no generó $envfile. No hay env vars de Production en el proyecto de Vercel."
-            exit 1
-          fi
-          missing=""
-          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY; do
-            # Considera faltante si no existe la clave o si su valor está vacío.
-            if ! grep -qE "^${v}=.+" "$envfile"; then
-              missing="$missing $v"
+          # Reemplaza a 'vercel pull': generamos a mano lo que 'vercel build' y
+          # 'vercel deploy --prebuilt' necesitan, tomándolo de los secrets de GitHub.
+          mkdir -p .vercel
+
+          # 1) project.json: a qué proyecto/org desplegar. (Sin heredoc para no
+          #    depender de la indentación que YAML aplica al bloque run.)
+          printf '{"orgId":"%s","projectId":"%s"}\n' "$VERCEL_ORG_ID" "$VERCEL_PROJECT_ID" > .vercel/project.json
+
+          # 2) env vars de producción: 'vercel build' las hornea desde este archivo.
+          #    Las NEXT_PUBLIC_* no son secretas (van embebidas en el JS del cliente).
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+          } > .vercel/.env.production.local
+
+          # Validar que quedaron con valor (defensa ante secrets vacíos).
+          for v in NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY; do
+            if ! grep -qE "^${v}=.+" .vercel/.env.production.local; then
+              echo "::error::El secret $v está vacío en GitHub (Settings → Secrets and variables → Actions)."
+              exit 1
             fi
           done
-          if [ -n "$missing" ]; then
-            echo "::error::Faltan env vars en Vercel (Settings → Environment Variables, entorno Production):$missing"
-            echo "Las NEXT_PUBLIC_* se hornean en 'vercel build'; si faltan, el deploy levanta pero crashea con 'Your project's URL and Key are required'."
-            exit 1
-          fi
-          echo "Env vars de Production presentes en Vercel. OK para buildear."
+          echo "Entorno de Vercel preparado desde secrets de GitHub."
 
       - name: Build
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
