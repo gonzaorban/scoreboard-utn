@@ -33,12 +33,20 @@ export default async function AdminScoresPage() {
             .
           </p>
         </div>
-        <Link
-          href="/admin/equipos"
-          className={buttonVariants({ variant: "outline" })}
-        >
-          Gestionar equipos
-        </Link>
+        <div className="flex gap-2">
+          <Link
+            href="/admin/equipos"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Gestionar equipos
+          </Link>
+          <Link
+            href="/admin/profesores"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Profesores
+          </Link>
+        </div>
       </div>
 
       <ScoreEditor teams={teams ?? []} />

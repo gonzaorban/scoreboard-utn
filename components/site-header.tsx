@@ -50,6 +50,12 @@ export async function SiteHeader() {
               >
                 Equipos
               </Link>
+              <Link
+                href="/admin/profesores"
+                className={buttonVariants({ variant: "ghost", size: "sm" })}
+              >
+                Profesores
+              </Link>
               <span className="ml-2 hidden text-xs text-muted-foreground sm:inline">
                 Prof. {teacher.full_name}
               </span>
