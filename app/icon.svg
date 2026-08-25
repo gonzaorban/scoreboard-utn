@@ -1,0 +1,15 @@
+<!-- Favicon. Copia estática del escudo de components/crest.tsx (versión canónica).
+     No puede usar currentColor ni variables del tema: el navegador lo renderiza
+     aislado del sitio, así que los colores van fijos. Si cambiás el crest, replicá acá. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <path d="M32 3 7 11v22c0 13.3 10.2 23.1 25 28 14.8-4.9 25-14.7 25-28V11L32 3Z" fill="#6b2318"/>
+  <g clip-path="url(#c)" opacity="0.9">
+    <path d="M32 8v22H11V13l21-5Z" fill="#8f2320"/>
+    <path d="M32 8v22h21V13L32 8Z" fill="#1f3f7a"/>
+    <path d="M11 30h21v25c-11.7-4.2-19.5-11.9-21-22v-3Z" fill="#1f5c3d"/>
+    <path d="M53 30H32v25c11.7-4.2 19.5-11.9 21-22v-3Z" fill="#e0a92b"/>
+  </g>
+  <path d="M32 3 7 11v22c0 13.3 10.2 23.1 25 28 14.8-4.9 25-14.7 25-28V11L32 3Z" fill="none" stroke="#d9b45c" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M32 8v47M11 30h42" stroke="#d9b45c" stroke-width="2.5"/>
+  <defs><clipPath id="c"><path d="M32 3 7 11v22c0 13.3 10.2 23.1 25 28 14.8-4.9 25-14.7 25-28V11L32 3Z"/></clipPath></defs>
+</svg>

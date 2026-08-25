@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentTeacher } from "@/lib/auth";
 import { signOut } from "@/app/actions/auth";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Crest } from "@/components/crest";
 
 /**
  * Cabecera del sitio. Muestra navegación pública y, si hay un profesor
@@ -14,9 +15,7 @@ export async function SiteHeader() {
     <header className="border-b border-border/60 bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl" aria-hidden>
-            🪄
-          </span>
+          <Crest className="size-7 text-primary" />
           <span className="font-heading text-lg font-bold leading-tight text-primary">
             La Copa de las Casas
           </span>
