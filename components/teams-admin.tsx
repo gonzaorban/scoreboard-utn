@@ -24,10 +24,42 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { Team } from "@/lib/database.types";
+import { NativeSelect } from "@/components/ui/native-select";
+import { subjectLabel } from "@/lib/subjects";
+import type { Subject, TeamWithSubject } from "@/lib/database.types";
+
+/** Selector de materia para los diálogos de alta y edición. */
+function SubjectField({
+  id,
+  subjects,
+  defaultValue,
+}: {
+  id: string;
+  subjects: Subject[];
+  defaultValue?: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>Materia</Label>
+      <NativeSelect id={id} name="subject_id" required defaultValue={defaultValue}>
+        {subjects.map((subject) => (
+          <option key={subject.id} value={subject.id}>
+            {subjectLabel(subject)}
+          </option>
+        ))}
+      </NativeSelect>
+    </div>
+  );
+}
 
 /** Diálogo para crear un equipo nuevo. */
-function CreateTeamDialog() {
+function CreateTeamDialog({
+  subjects,
+  defaultSubjectId,
+}: {
+  subjects: Subject[];
+  defaultSubjectId?: string;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -72,6 +104,11 @@ function CreateTeamDialog() {
                 defaultValue={0}
               />
             </div>
+            <SubjectField
+              id="new-subject"
+              subjects={subjects}
+              defaultValue={defaultSubjectId}
+            />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
@@ -85,7 +122,13 @@ function CreateTeamDialog() {
 }
 
 /** Diálogo para editar nombre de un equipo. */
-function EditTeamDialog({ team }: { team: Team }) {
+function EditTeamDialog({
+  team,
+  subjects,
+}: {
+  team: TeamWithSubject;
+  subjects: Subject[];
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -119,7 +162,7 @@ function EditTeamDialog({ team }: { team: Team }) {
           <DialogHeader>
             <DialogTitle className="font-heading">Editar equipo</DialogTitle>
             <DialogDescription>
-              Cambia el nombre. Los puntos se gestionan desde la
+              Cambiá el nombre o la materia. Los puntos se gestionan desde la
               sección de puntos.
             </DialogDescription>
           </DialogHeader>
@@ -133,6 +176,11 @@ function EditTeamDialog({ team }: { team: Team }) {
                 defaultValue={team.name}
               />
             </div>
+            <SubjectField
+              id={`subject-${team.id}`}
+              subjects={subjects}
+              defaultValue={team.subject_id}
+            />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
@@ -146,7 +194,7 @@ function EditTeamDialog({ team }: { team: Team }) {
 }
 
 /** Diálogo de confirmación para eliminar un equipo. */
-function DeleteTeamDialog({ team }: { team: Team }) {
+function DeleteTeamDialog({ team }: { team: TeamWithSubject }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -199,19 +247,43 @@ function DeleteTeamDialog({ team }: { team: Team }) {
   );
 }
 
-export function TeamsAdmin({ teams }: { teams: Team[] }) {
+export function TeamsAdmin({
+  teams,
+  subjects,
+  selectedSubjectId,
+}: {
+  teams: TeamWithSubject[];
+  subjects: Subject[];
+  selectedSubjectId?: string;
+}) {
+  // Sin materias cargadas no se puede dar de alta un equipo (subject_id es
+  // obligatorio), así que guiamos al profesor en vez de mostrar un form roto.
+  if (subjects.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-border p-10 text-center text-muted-foreground">
+        <p className="text-lg">Todavía no hay materias.</p>
+        <p className="text-sm">
+          Creá una materia antes de dar de alta equipos.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-xl font-semibold">
           Equipos ({teams.length})
         </h2>
-        <CreateTeamDialog />
+        <CreateTeamDialog
+          subjects={subjects}
+          defaultSubjectId={selectedSubjectId}
+        />
       </div>
 
       {teams.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border p-10 text-center text-muted-foreground">
-          Aún no hay equipos. Crea el primero con “Nuevo equipo”.
+          Aún no hay equipos en esta materia. Crea el primero con “Nuevo equipo”.
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
@@ -219,6 +291,7 @@ export function TeamsAdmin({ teams }: { teams: Team[] }) {
             <TableHeader>
               <TableRow>
                 <TableHead>Equipo</TableHead>
+                <TableHead className="hidden md:table-cell">Materia</TableHead>
                 <TableHead className="text-right">Puntos</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -227,12 +300,15 @@ export function TeamsAdmin({ teams }: { teams: Team[] }) {
               {teams.map((team) => (
                 <TableRow key={team.id}>
                   <TableCell className="font-medium">{team.name}</TableCell>
+                  <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
+                    {team.subject ? subjectLabel(team.subject) : "—"}
+                  </TableCell>
                   <TableCell className="text-right font-mono font-bold tabular-nums">
                     {team.points}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <EditTeamDialog team={team} />
+                      <EditTeamDialog team={team} subjects={subjects} />
                       <DeleteTeamDialog team={team} />
                     </div>
                   </TableCell>

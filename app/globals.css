@@ -58,7 +58,7 @@
   --color-hufflepuff-foreground: oklch(0.25 0.04 60);
 }
 
-/* ====== Tema "Hogwarts" — Ingeniería y Calidad ====== */
+/* ====== Tema "Hogwarts" ====== */
 /* Paleta inspirada en pergamino, madera, oro viejo y vinotinto del Gran Comedor. */
 :root {
   --background: oklch(0.96 0.018 85); /* pergamino */

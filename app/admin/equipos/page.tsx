@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { TeamsAdmin } from "@/components/teams-admin";
+import { SubjectFilter } from "@/components/subject-filter";
 import { buttonVariants } from "@/components/ui/button";
+import { getSubjectsAndSelection } from "@/lib/subjects-server";
+import { withSubjectParam } from "@/lib/subjects";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -9,12 +12,22 @@ export const metadata = {
   title: "Gestión de equipos · Marcador",
 };
 
-export default async function AdminTeamsPage() {
+export default async function AdminTeamsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ materia?: string }>;
+}) {
+  const { materia } = await searchParams;
+  const { subjects, selected } = await getSubjectsAndSelection(materia);
+
   const supabase = await createClient();
-  const { data: teams } = await supabase
-    .from("teams")
-    .select("*")
-    .order("name", { ascending: true });
+  const { data: teams } = selected
+    ? await supabase
+        .from("teams")
+        .select("*, subject:subjects(*)")
+        .eq("subject_id", selected.id)
+        .order("name", { ascending: true })
+    : { data: [] };
 
   return (
     <div>
@@ -28,8 +41,17 @@ export default async function AdminTeamsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link href="/admin" className={buttonVariants({ variant: "outline" })}>
+          <Link
+            href={withSubjectParam("/admin", selected)}
+            className={buttonVariants({ variant: "outline" })}
+          >
             Otorgar puntos
+          </Link>
+          <Link
+            href="/admin/materias"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Materias
           </Link>
           <Link
             href="/admin/profesores"
@@ -40,7 +62,15 @@ export default async function AdminTeamsPage() {
         </div>
       </div>
 
-      <TeamsAdmin teams={teams ?? []} />
+      <div className="mb-6">
+        <SubjectFilter subjects={subjects} selected={selected} />
+      </div>
+
+      <TeamsAdmin
+        teams={teams ?? []}
+        subjects={subjects}
+        selectedSubjectId={selected?.id}
+      />
     </div>
   );
 }

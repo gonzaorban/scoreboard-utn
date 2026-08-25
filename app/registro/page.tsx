@@ -31,9 +31,8 @@ export default async function RegistroPage() {
             Solicitar acceso de profesor
           </CardTitle>
           <CardDescription>
-            Crea tu cuenta para la materia{" "}
-            <span className="font-semibold">Ingeniería y Calidad</span>. Tu
-            solicitud quedará pendiente hasta que otro profesor la apruebe.
+            Crea tu cuenta de profesor. Tu solicitud quedará pendiente hasta
+            que otro profesor la apruebe.
           </CardDescription>
         </CardHeader>
         <CardContent>
