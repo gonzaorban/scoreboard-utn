@@ -90,11 +90,14 @@ export function sortSubjects(subjects: Subject[]): Subject[] {
 }
 
 /**
- * Resuelve qué materia mostrar a partir del `?materia=` de la URL.
+ * Resuelve qué materia mostrar a partir del id pedido.
+ *
+ * El id lo elige `getSubjectsAndSelection()` en `lib/subjects-server.ts`: sale
+ * del `?materia=` de la URL o, si no hay, de la cookie de preferencia.
  *
  * Precedencia:
- *  1. El id pedido en la URL, si existe. Un id inválido o de una materia ya
- *     borrada NO rompe: cae al default (un link viejo debe seguir mostrando algo).
+ *  1. El id pedido, si existe. Un id inválido o de una materia ya borrada NO
+ *     rompe: cae al default (un link viejo debe seguir mostrando algo).
  *  2. Año actual + cuatrimestre en curso (el caso normal).
  *  3. Año actual + `anual` (una anual cuenta para el año en curso, pero pierde
  *     contra el cuatrimestre exacto).
