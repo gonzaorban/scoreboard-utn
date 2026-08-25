@@ -10,12 +10,20 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { resolveSelectedSubject, sortSubjects } from "@/lib/subjects";
+import { readSubjectCookie } from "@/lib/subject-cookie";
 import type { Subject } from "@/lib/database.types";
 
 /**
  * Trae todas las materias (lectura pública, tabla chica) y resuelve cuál
- * mostrar según el `?materia=` de la URL. Ver `resolveSelectedSubject` para
- * la precedencia del default.
+ * mostrar.
+ *
+ * Precedencia: `?materia=` de la URL > materia recordada en la cookie >
+ * default por año y cuatrimestre (ver `resolveSelectedSubject`).
+ *
+ * El link explícito manda siempre: si un profesor comparte la URL de otra
+ * cursada, hay que ver ESA aunque haya otra recordada. Pero un `?materia=` que
+ * ya no existe (materia borrada, link viejo) no debe pisar la preferencia del
+ * alumno, así que lo validamos antes de quedarnos con él.
  */
 export async function getSubjectsAndSelection(
   requestedId?: string,
@@ -25,5 +33,13 @@ export async function getSubjectsAndSelection(
 
   const subjects = sortSubjects(data ?? []);
 
-  return { subjects, selected: resolveSelectedSubject(subjects, requestedId) };
+  const urlId = subjects.some((s) => s.id === requestedId)
+    ? requestedId
+    : undefined;
+  // La cookie solo se consulta si la URL no trajo una materia válida.
+  const preferredId = urlId ?? (await readSubjectCookie());
+
+  // Un id de cookie inválido (materia borrada) no rompe: `resolveSelectedSubject`
+  // cae al default de año/cuatrimestre igual que con un `?materia=` inválido.
+  return { subjects, selected: resolveSelectedSubject(subjects, preferredId) };
 }
