@@ -1,11 +1,33 @@
 @AGENTS.md
 
-# Copa de las Casas · Ingeniería y Calidad
+# Copa de las Casas · Marcador multi-materia
 
-Marcador de puntos por equipos ("casas" de Hogwarts) para la materia Ingeniería y
-Calidad. Los **profesores** logueados otorgan/restan puntos y hacen ABM de equipos
-y profesores; **estudiantes/visitantes** ven la tabla y el historial sin login
+Marcador de puntos por equipos ("casas" de Hogwarts) para **varias materias**. Los
+**profesores** logueados otorgan/restan puntos y hacen ABM de materias, equipos y
+profesores; **estudiantes/visitantes** ven la tabla y el historial sin login
 (solo lectura). Repo público — sin credenciales versionadas.
+
+## Modelo de materias (migración 0004)
+
+- Una **materia** es una *cursada*: la terna única `(name, year, term)`. `term` es
+  el enum de Postgres `subject_term`: `primer_cuatrimestre` | `segundo_cuatrimestre`
+  | `anual`.
+- Cada **equipo** pertenece a una materia (`teams.subject_id`, NOT NULL,
+  `on delete restrict`). El **año del equipo se deriva de su materia**: no hay
+  columna `year` en `teams`.
+- `score_changes` guarda un **snapshot** de la materia (`subject_id` + `subject_name`),
+  igual que ya hacía con `team_name`/`changed_by_name`. Así, reasignar un equipo de
+  materia no reescribe su historial pasado. `update_score()` los estampa.
+- **Filtro por materia**: search param `?materia=<uuid>` en `/`, `/historial`,
+  `/admin` y `/admin/equipos`. El default (sin param) sale de
+  `resolveSelectedSubject()` en [lib/subjects.ts](lib/subjects.ts): año actual +
+  cuatrimestre según el mes (1–7 → 1.º, 8–12 → 2.º), con fallback a la más reciente.
+- Helpers puros en [lib/subjects.ts](lib/subjects.ts); la consulta a la base, aparte
+  en [lib/subjects-server.ts](lib/subjects-server.ts) (si estuviera junto a los
+  helpers, el bundle del cliente arrastraría `next/headers`).
+- El nombre de la materia **no** se hardcodea en la UI: sale de la materia
+  seleccionada. Header, footer, `/login` y `/registro` no la mencionan (se ven en
+  rutas sin materia).
 
 ## Stack
 
@@ -57,7 +79,7 @@ y profesores; **estudiantes/visitantes** ven la tabla y el historial sin login
   directamente.
 - Aprobar/rechazar/dar de baja profesores pasa por funciones `security definer`;
   el auto-registro solo permite crear la **propia** solicitud en estado `pending`.
-- El esquema vive en [supabase/migrations/](supabase/migrations/) (0001 → 0003);
+- El esquema vive en [supabase/migrations/](supabase/migrations/) (0001 → 0004);
   aplicalas en orden. Tras tocar el esquema, regenerá
   [lib/database.types.ts](lib/database.types.ts).
 

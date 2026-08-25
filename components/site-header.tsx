@@ -19,9 +19,6 @@ export async function SiteHeader() {
           </span>
           <span className="font-heading text-lg font-bold leading-tight text-primary">
             La Copa de las Casas
-            <span className="block text-[0.7rem] font-normal uppercase tracking-widest text-muted-foreground">
-              Ingeniería y Calidad
-            </span>
           </span>
         </Link>
 
@@ -49,6 +46,12 @@ export async function SiteHeader() {
                 className={buttonVariants({ variant: "ghost", size: "sm" })}
               >
                 Equipos
+              </Link>
+              <Link
+                href="/admin/materias"
+                className={buttonVariants({ variant: "ghost", size: "sm" })}
+              >
+                Materias
               </Link>
               <Link
                 href="/admin/profesores"

@@ -1,7 +1,7 @@
 /**
  * Tipos del esquema de la base de datos.
  *
- * Escritos a mano para reflejar `supabase/migrations/0001_init.sql`.
+ * Escritos a mano para reflejar `supabase/migrations/` (0001 → 0004).
  * Puedes regenerarlos automáticamente desde tu proyecto con:
  *   npx supabase gen types typescript --project-id <ref> --schema public > lib/database.types.ts
  */
@@ -16,6 +16,15 @@ export type Json =
 
 /** Estado de aprobación de un profesor. Ver migración 0003. */
 export type TeacherStatus = "pending" | "approved";
+
+/**
+ * Cuatrimestre de cursado de una materia. Enum real de Postgres
+ * (`public.subject_term`). Ver migración 0004.
+ */
+export type SubjectTerm =
+  | "primer_cuatrimestre"
+  | "segundo_cuatrimestre"
+  | "anual";
 
 export interface Database {
   public: {
@@ -41,18 +50,45 @@ export interface Database {
         };
         Relationships: [];
       };
+      subjects: {
+        Row: {
+          id: string;
+          name: string;
+          year: number;
+          term: SubjectTerm;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          year: number;
+          term: SubjectTerm;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          year?: number;
+          term?: SubjectTerm;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       teams: {
         Row: {
           id: string;
           name: string;
           points: number;
+          subject_id: string;
           created_at: string;
           updated_at: string;
         };
+        // `subject_id` es obligatorio: NOT NULL sin default (migración 0004).
         Insert: {
           id?: string;
           name: string;
           points?: number;
+          subject_id: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -60,10 +96,21 @@ export interface Database {
           id?: string;
           name?: string;
           points?: number;
+          subject_id?: string;
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        // Declarada para que supabase-js infiera los embeds
+        // `select("*, subject:subjects(*)")`.
+        Relationships: [
+          {
+            foreignKeyName: "teams_subject_id_fkey";
+            columns: ["subject_id"];
+            isOneToOne: false;
+            referencedRelation: "subjects";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       score_changes: {
         Row: {
@@ -75,6 +122,8 @@ export interface Database {
           reason: string | null;
           changed_by: string | null;
           changed_by_name: string;
+          subject_id: string | null;
+          subject_name: string | null;
           created_at: string;
         };
         Insert: {
@@ -86,6 +135,8 @@ export interface Database {
           reason?: string | null;
           changed_by?: string | null;
           changed_by_name: string;
+          subject_id?: string | null;
+          subject_name?: string | null;
           created_at?: string;
         };
         Update: {
@@ -97,6 +148,8 @@ export interface Database {
           reason?: string | null;
           changed_by?: string | null;
           changed_by_name?: string;
+          subject_id?: string | null;
+          subject_name?: string | null;
           created_at?: string;
         };
         Relationships: [];
@@ -129,12 +182,17 @@ export interface Database {
         Returns: undefined;
       };
     };
-    Enums: Record<string, never>;
+    Enums: {
+      subject_term: SubjectTerm;
+    };
     CompositeTypes: Record<string, never>;
   };
 }
 
 // Atajos útiles
+export type Subject = Database["public"]["Tables"]["subjects"]["Row"];
 export type Team = Database["public"]["Tables"]["teams"]["Row"];
+/** Equipo con su materia embebida (select `*, subject:subjects(*)`). */
+export type TeamWithSubject = Team & { subject: Subject | null };
 export type Teacher = Database["public"]["Tables"]["teachers"]["Row"];
 export type ScoreChange = Database["public"]["Tables"]["score_changes"]["Row"];

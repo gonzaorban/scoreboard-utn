@@ -50,6 +50,12 @@ export default async function AdminTeachersPage() {
           >
             Equipos
           </Link>
+          <Link
+            href="/admin/materias"
+            className={buttonVariants({ variant: "outline" })}
+          >
+            Materias
+          </Link>
         </div>
       </div>
 

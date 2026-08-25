@@ -1,11 +1,15 @@
-# 🪄 Copa de las Casas · Ingeniería y Calidad
+# 🪄 Copa de las Casas · Marcador por equipos
 
-> Marcador online de puntos por equipos para la materia **Ingeniería y
-> Calidad**, ambientado en la **Copa de las Casas de Hogwarts** (Harry Potter).
+> Marcador online de puntos por equipos para **varias materias**, ambientado en
+> la **Copa de las Casas de Hogwarts** (Harry Potter).
 
 Una aplicación web sencilla donde el profesorado otorga o resta puntos a los
 equipos ("casas") y cualquier estudiante puede consultar, sin registrarse, la
 tabla de posiciones y el historial completo de cambios.
+
+Cada **materia** es una cursada `(nombre, año, cuatrimestre)` y cada equipo
+pertenece a una de ellas. Un selector permite cambiar de materia; el marcador,
+el historial y el panel de profesores se filtran por la cursada elegida.
 
 ---
 
@@ -38,7 +42,9 @@ El profesorado inicia sesión con su email y contraseña y obtiene acceso a:
 
 - **Otorgar / restar puntos** a cada equipo, con un motivo opcional. Cada cambio
   queda firmado automáticamente con su nombre y la fecha/hora en el historial.
-- **Gestionar equipos**: crear, renombrar o eliminar.
+- **Gestionar materias**: alta, baja y modificación de cursadas (nombre, año y
+  cuatrimestre). Una materia con equipos no se puede eliminar.
+- **Gestionar equipos**: crear, renombrar, reasignar de materia o eliminar.
 - **Gestionar profesores**: en la sección **Profesores**, aprobar o rechazar las
   solicitudes de quienes se registran, y dar de baja a profesores con acceso.
 
@@ -89,9 +95,13 @@ de [`lib/database.types.ts`](lib/database.types.ts).
    [`supabase/migrations/`](supabase/migrations/):
    [`0001_init.sql`](supabase/migrations/0001_init.sql) (tablas, RLS, `is_teacher()`,
    `update_score()`), [`0002_drop_house.sql`](supabase/migrations/0002_drop_house.sql)
-   y [`0003_teacher_approval.sql`](supabase/migrations/0003_teacher_approval.sql)
+   [`0003_teacher_approval.sql`](supabase/migrations/0003_teacher_approval.sql)
    (auto-registro + aprobación: columna `status` en `teachers` y funciones
-   `approve_teacher()` / `reject_teacher()` / `remove_teacher()`).
+   `approve_teacher()` / `reject_teacher()` / `remove_teacher()`) y
+   [`0004_subjects.sql`](supabase/migrations/0004_subjects.sql) (materias:
+   tabla `subjects`, enum `subject_term`, `teams.subject_id` y snapshot de
+   materia en el historial).
+
 3. **Desactiva la confirmación de email**: en **Authentication → Providers →
    Email**, apaga _Confirm email_ (auto-confirm). El auto-registro necesita que
    el `signUp` deje la sesión activa de inmediato; con la confirmación activada,
@@ -164,15 +174,18 @@ app/
     layout.tsx          # Guard: solo profesores aprobados
     page.tsx            # Otorgar/restar puntos (botón Guardar)
     equipos/page.tsx    # ABM de equipos
+    materias/page.tsx   # ABM de materias (cursadas)
     profesores/page.tsx # Aprobar/rechazar/dar de baja profesores
-  actions/              # Server Actions (auth, scores, teams, teachers-admin)
+  actions/              # Server Actions (auth, scores, teams, subjects, teachers-admin)
 components/             # UI (tablas, editor, ABM) + shadcn/ui en components/ui
 lib/
   supabase/             # clientes server/client/proxy
   auth.ts               # getCurrentTeacher() + getCurrentUserStatus()
+  subjects.ts           # helpers puros de materias (default, orden, etiquetas)
+  subjects-server.ts    # lectura de materias + materia seleccionada
   database.types.ts     # tipos del esquema
 proxy.ts                # refresco de sesión (reemplaza al "middleware")
-supabase/migrations/    # SQL del esquema + RLS (0001 → 0003)
+supabase/migrations/    # SQL del esquema + RLS (0001 → 0004)
 ```
 
 ### Notas de diseño

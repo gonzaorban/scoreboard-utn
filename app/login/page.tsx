@@ -32,9 +32,8 @@ export default async function LoginPage() {
             Sala de Profesores
           </CardTitle>
           <CardDescription>
-            Solo el profesorado de{" "}
-            <span className="font-semibold">Ingeniería y Calidad</span> puede
-            otorgar o restar puntos a los equipos.
+            Solo el profesorado autorizado puede otorgar o restar puntos a los
+            equipos.
           </CardDescription>
         </CardHeader>
         <CardContent>
