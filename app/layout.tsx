@@ -28,9 +28,28 @@ export const metadata: Metadata = {
   title: "Marcador · Copa de las Casas",
   description:
     "Marcador oficial por equipos. Los profesores otorgan y restan puntos; los estudiantes consultan la tabla y el historial.",
-  icons: {
-    icon: "/favicon.svg",
+  // Necesario para que las URLs de OG salgan absolutas (sin esto, una ruta
+  // relativa en metadata es error de build). En Vercel la URL de produccion
+  // viene sola; NEXT_PUBLIC_SITE_URL queda como override si hay dominio propio.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : "http://localhost:3000"),
+  ),
+  openGraph: {
+    title: "Marcador · Copa de las Casas",
+    description:
+      "Marcador oficial por equipos. Los profesores otorgan y restan puntos; los estudiantes consultan la tabla y el historial.",
+    siteName: "La Copa de las Casas",
+    locale: "es_AR",
+    type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+  },
+  // El favicon sale por convencion de archivo (app/icon.svg). No declarar
+  // `icons` aca: hacerlo anula esa convencion.
 };
 
 export default function RootLayout({
