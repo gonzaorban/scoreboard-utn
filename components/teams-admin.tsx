@@ -7,6 +7,12 @@ import { createTeam, updateTeam, deleteTeam } from "@/app/actions/teams";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Table,
   TableBody,
@@ -109,6 +115,15 @@ function CreateTeamDialog({
               subjects={subjects}
               defaultValue={defaultSubjectId}
             />
+            <div className="space-y-2">
+              <Label htmlFor="new-members">Integrantes (uno por línea)</Label>
+              <Textarea
+                id="new-members"
+                name="members"
+                placeholder={"Apellido Nombre\nApellido Nombre"}
+                rows={5}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
@@ -162,8 +177,8 @@ function EditTeamDialog({
           <DialogHeader>
             <DialogTitle className="font-heading">Editar equipo</DialogTitle>
             <DialogDescription>
-              Cambiá el nombre o la materia. Los puntos se gestionan desde la
-              sección de puntos.
+              Cambiá el nombre, la materia o los integrantes. Los puntos se
+              gestionan desde la sección de puntos.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -181,6 +196,18 @@ function EditTeamDialog({
               subjects={subjects}
               defaultValue={team.subject_id}
             />
+            <div className="space-y-2">
+              <Label htmlFor={`members-${team.id}`}>
+                Integrantes (uno por línea)
+              </Label>
+              <Textarea
+                id={`members-${team.id}`}
+                name="members"
+                placeholder={"Apellido Nombre\nApellido Nombre"}
+                rows={5}
+                defaultValue={team.members.join("\n")}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button type="submit" disabled={isPending}>
@@ -299,7 +326,26 @@ export function TeamsAdmin({
             <TableBody>
               {teams.map((team) => (
                 <TableRow key={team.id}>
-                  <TableCell className="font-medium">{team.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <span>{team.name}</span>
+                      {team.members.length > 0 && (
+                        <Tooltip>
+                          <TooltipTrigger className="cursor-default rounded-full bg-transparent px-1.5 py-0 text-xs font-normal text-muted-foreground ring-1 ring-border">
+                            {team.members.length}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="mb-1 font-semibold">Integrantes</p>
+                            <ul className="space-y-0.5">
+                              {team.members.map((member) => (
+                                <li key={member}>{member}</li>
+                              ))}
+                            </ul>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                     {team.subject ? subjectLabel(team.subject) : "—"}
                   </TableCell>
