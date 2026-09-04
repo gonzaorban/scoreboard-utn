@@ -6,6 +6,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import type { Team } from "@/lib/database.types";
 
@@ -51,7 +56,23 @@ export function ScoreboardTable({ teams }: { teams: Team[] }) {
                 )}
               </TableCell>
               <TableCell className="font-heading text-base font-semibold">
-                {team.name}
+                {team.members.length > 0 ? (
+                  <Tooltip>
+                    <TooltipTrigger className="cursor-default bg-transparent p-0 font-heading text-base font-semibold underline decoration-dotted decoration-1 underline-offset-4">
+                      {team.name}
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="mb-1 font-semibold">Integrantes</p>
+                      <ul className="space-y-0.5">
+                        {team.members.map((member) => (
+                          <li key={member}>{member}</li>
+                        ))}
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  team.name
+                )}
               </TableCell>
               <TableCell className="text-right font-mono text-lg font-bold tabular-nums text-primary">
                 {team.points}

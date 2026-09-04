@@ -12,6 +12,15 @@ const UNIQUE_VIOLATION = "23505";
 const DUPLICATE_MESSAGE =
   "Ya existe un equipo con ese nombre en la materia seleccionada.";
 
+/** Convierte el textarea de integrantes (uno por línea) en un array limpio. */
+function parseMembers(formData: FormData): string[] {
+  const raw = String(formData.get("members") ?? "");
+  return raw
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
 /** Revalida todo lo que muestra equipos. */
 function revalidateTeams() {
   revalidatePath("/");
@@ -38,10 +47,12 @@ export async function createTeam(formData: FormData): Promise<ActionResult> {
     return { ok: false, error: "Tenés que elegir una materia para el equipo." };
   }
 
+  const members = parseMembers(formData);
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("teams")
-    .insert({ name, points, subject_id: subjectId });
+    .insert({ name, points, subject_id: subjectId, members });
 
   if (error) {
     return {
@@ -80,12 +91,15 @@ export async function updateTeam(
     return { ok: false, error: "Tenés que elegir una materia para el equipo." };
   }
 
+  const members = parseMembers(formData);
+
   const supabase = await createClient();
   const { error } = await supabase
     .from("teams")
     .update({
       name,
       subject_id: subjectId,
+      members,
       updated_at: new Date().toISOString(),
     })
     .eq("id", teamId);

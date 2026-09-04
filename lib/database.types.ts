@@ -1,7 +1,7 @@
 /**
  * Tipos del esquema de la base de datos.
  *
- * Escritos a mano para reflejar `supabase/migrations/` (0001 → 0004).
+ * Escritos a mano para reflejar `supabase/migrations/` (0001 → 0005).
  * Puedes regenerarlos automáticamente desde tu proyecto con:
  *   npx supabase gen types typescript --project-id <ref> --schema public > lib/database.types.ts
  */
@@ -80,6 +80,7 @@ export interface Database {
           name: string;
           points: number;
           subject_id: string;
+          members: string[];
           created_at: string;
           updated_at: string;
         };
@@ -89,6 +90,7 @@ export interface Database {
           name: string;
           points?: number;
           subject_id: string;
+          members?: string[];
           created_at?: string;
           updated_at?: string;
         };
@@ -97,6 +99,7 @@ export interface Database {
           name?: string;
           points?: number;
           subject_id?: string;
+          members?: string[];
           created_at?: string;
           updated_at?: string;
         };
